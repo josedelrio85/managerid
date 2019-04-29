@@ -1,6 +1,6 @@
 ## BYSIDECAR ID GENERATOR
 
-This functionality manager the generation of BySidecar Id's to identify visitors in our LP's. 
+This functionality manages the generation of BySidecar Id's to identify visitors in our LP's. 
 
 
 To test the API, use a JSON with this format:
