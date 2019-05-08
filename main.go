@@ -52,19 +52,37 @@ func main() {
 		log.Fatalf("Error parsing to string the RDS's port %s, Err: %s", port, err)
 	}
 
-	rds := &idbsc.Rds{
-		Host:     host,
-		Port:     portInt,
-		User:     user,
-		Password: password,
-		DBName:   dbname,
+	// rds := &idbsc.Rds{
+	// 	Host:     host,
+	// 	Port:     portInt,
+	// 	User:     user,
+	// 	Password: password,
+	// 	DBName:   dbname,
+	// }
+	// ch := idbsc.ClientHandler{
+	// 	Querier: rds,
+	// }
+
+	rds := &idbsc.Rdsgorm{
+		Host:      host,
+		Port:      portInt,
+		User:      user,
+		Password:  password,
+		DBName:    dbname,
+		Charset:   "utf8",
+		ParseTime: "True",
+		Loc:       "Local",
 	}
 	ch := idbsc.ClientHandler{
-		Querier: rds,
+		Queriergorm: rds,
 	}
 
 	if err := rds.Open(); err != nil {
 		log.Fatalf("error opening redshift's connection. err: %s", err)
+	}
+
+	if err := rds.CreateTable(); err != nil {
+		log.Fatalf("error creating the table. err: %s", err)
 	}
 
 	r.PathPrefix("/idbsc/").Handler(ch.HandleFunction())
