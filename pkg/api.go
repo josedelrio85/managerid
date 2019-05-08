@@ -28,9 +28,10 @@ type Identity struct {
 // ClientHandler is a struct created to use its ch property as element that implements
 // http.Handler.Neededed to call HandleFunction as param in router Handler function.
 type ClientHandler struct {
-	ch      http.Handler
-	Interac Interaction
-	Querier Querier
+	ch          http.Handler
+	Interac     Interaction
+	Querier     Querier
+	Queriergorm Queriergorm
 }
 
 // HandleFunction is a function used to manage all received requests.
@@ -52,7 +53,8 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			return
 		}
 
-		identity, err := ch.Querier.CheckIdentity(ch.Interac)
+		// identity, err := ch.Querier.CheckIdentity(ch.Interac)
+		identity, err := ch.Queriergorm.CheckIdentity(ch.Interac)
 		if err != nil {
 			message := fmt.Sprintf("error performing interaction's CheckIdentity, err: %v", err)
 			http.Error(w, message, http.StatusInternalServerError)
