@@ -52,17 +52,6 @@ func main() {
 		log.Fatalf("Error parsing to string the RDS's port %s, Err: %s", port, err)
 	}
 
-	// rds := &idbsc.Rds{
-	// 	Host:     host,
-	// 	Port:     portInt,
-	// 	User:     user,
-	// 	Password: password,
-	// 	DBName:   dbname,
-	// }
-	// ch := idbsc.ClientHandler{
-	// 	Querier: rds,
-	// }
-
 	rds := &idbsc.Rdsgorm{
 		Host:      host,
 		Port:      portInt,
@@ -80,6 +69,7 @@ func main() {
 	if err := rds.Open(); err != nil {
 		log.Fatalf("error opening redshift's connection. err: %s", err)
 	}
+	defer rds.Close()
 
 	if err := rds.CreateTable(); err != nil {
 		log.Fatalf("error creating the table. err: %s", err)
