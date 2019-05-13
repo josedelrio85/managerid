@@ -12,39 +12,11 @@ import (
 
 func main() {
 
-	//It must be deleted when this first approach is closed
-	f, err := os.OpenFile("../idbsc_log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Fatalf("error opening file: %v", err)
-	}
-	defer f.Close()
-	log.SetOutput(f)
-
 	r := mux.NewRouter()
 
-	host, ok := os.LookupEnv("TEST_HOST_IDBSC")
+	port, ok := os.LookupEnv("PORT_IDBSC")
 	if !ok {
-		log.Fatal("Init error. Missing TEST_HOST_IDBSC ENV VAR")
-	}
-
-	port, ok := os.LookupEnv("TEST_PORT_IDBSC")
-	if !ok {
-		log.Fatal("Init error. Missing TEST_PORT_IDBSC ENV VAR")
-	}
-
-	user, ok := os.LookupEnv("TEST_USER_IDBSC")
-	if !ok {
-		log.Fatal("Init error. Missing TEST_USER_IDBSC ENV VAR")
-	}
-
-	password, ok := os.LookupEnv("TEST_PASSWORD_IDBSC")
-	if !ok {
-		log.Fatal("Init error. Missing TEST_PASSWORD_IDBSC ENV VAR")
-	}
-
-	dbname, ok := os.LookupEnv("TEST_DBNAME_IDBSC")
-	if !ok {
-		log.Fatal("Init error. Missing TEST_DBNAME_IDBSC ENV VAR")
+		log.Fatal("Init error. Missing PORT_IDBSC ENV VAR")
 	}
 
 	portInt, err := strconv.ParseInt(port, 10, 64)
@@ -53,11 +25,11 @@ func main() {
 	}
 
 	rds := &idbsc.Database{
-		Host:      host,
+		Host:      GetSetting("HOST_IDBSC"),
 		Port:      portInt,
-		User:      user,
-		Password:  password,
-		DBName:    dbname,
+		User:      GetSetting("USER_IDBSC"),
+		Password:  GetSetting("PASSWORD_IDBSC"),
+		DBName:    GetSetting("DBNAME_IDBSC"),
 		Charset:   "utf8",
 		ParseTime: "True",
 		Loc:       "Local",
@@ -78,4 +50,19 @@ func main() {
 	r.PathPrefix("/idbsc/").Handler(ch.HandleFunction())
 
 	log.Fatal(http.ListenAndServe(":4000", r))
+}
+
+// GetSetting reads an ENV VAR setting, it does crash the service if with an
+// error message if any setting is not found.
+//
+// - setting: The setting (ENV VAR) to read.
+//
+// Returns the setting value.
+func GetSetting(setting string) string {
+	value, ok := os.LookupEnv(setting)
+	if !ok {
+		log.Fatalf("Init error, %s ENV var not found", setting)
+	}
+
+	return value
 }
