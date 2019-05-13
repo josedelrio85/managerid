@@ -30,7 +30,6 @@ type Identity struct {
 type ClientHandler struct {
 	ch          http.Handler
 	Interac     Interaction
-	Querier     Querier
 	Queriergorm Queriergorm
 }
 
@@ -61,6 +60,7 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			return
 		}
 
+		w.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(identity)
 	})
 }
