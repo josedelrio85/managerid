@@ -3,7 +3,6 @@ package idbsc
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -15,19 +14,20 @@ func TestHandleFunction(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		Description string
-		Querier     Querier
-		TypeRequest string
-		Interaction Interaction
-		StatusCode  int
+		Description         string
+		Queriergorm         Queriergorm
+		TypeRequest         string
+		Interaction         Interaction
+		StatusCode          int
+		ExpectedContentType string
 	}{
-		// {
-		// 	Description: "when HandleFunction receive a GET request",
-		// 	TypeRequest: http.MethodGet,
-		// 	StatusCode:  http.StatusAccepted,
-		// },
 		{
-			Description: "when HandleFunction receive a POST request",
+			Description: "when HandleFunction receive a GET request",
+			TypeRequest: http.MethodGet,
+			StatusCode:  http.StatusMethodNotAllowed,
+		},
+		{
+			Description: "when HandleFunction receive a POST request and an Interaction object",
 			TypeRequest: http.MethodPost,
 			StatusCode:  http.StatusOK,
 			Interaction: Interaction{
@@ -35,16 +35,35 @@ func TestHandleFunction(t *testing.T) {
 				Application: "Test Application",
 				Provider:    "Test Provider",
 			},
-			Querier: &FakeDb{
+			Queriergorm: &FakeDb{
 				OpenFunc:          func() error { return nil },
-				CheckIdentityFunc: func(interaction Interaction) (*Identity, error) { return new(Identity), nil },
+				CheckIdentityFunc: func(interaction Interaction) (*Identitygorm, error) { return new(Identitygorm), nil },
+				CloseFunc:         func() error { return nil },
+				CreateTableFunc:   func() error { return nil },
 			},
+		},
+		{
+			Description: "when HandleFunction receive a POST request and an Interaction object and must receive an specific Content-Type header",
+			TypeRequest: http.MethodPost,
+			StatusCode:  http.StatusOK,
+			Interaction: Interaction{
+				IP:          "127.0.0.1",
+				Application: "Test Application",
+				Provider:    "Test Provider",
+			},
+			Queriergorm: &FakeDb{
+				OpenFunc:          func() error { return nil },
+				CheckIdentityFunc: func(interaction Interaction) (*Identitygorm, error) { return new(Identitygorm), nil },
+				CloseFunc:         func() error { return nil },
+				CreateTableFunc:   func() error { return nil },
+			},
+			ExpectedContentType: "application/json",
 		},
 	}
 
 	for _, test := range tests {
 		ch := ClientHandler{
-			Querier: test.Querier,
+			Queriergorm: test.Queriergorm,
 		}
 		ts := httptest.NewServer(ch.HandleFunction())
 		defer ts.Close()
@@ -67,11 +86,21 @@ func TestHandleFunction(t *testing.T) {
 			t.Errorf("error sending test Request: Err: %v", err)
 			return
 		}
-		fmt.Println(resp)
 
-		assert.Equal(test.StatusCode, 200)
+		assert.Equal(test.StatusCode, resp.StatusCode)
+
+		if (Interaction{}) != test.Interaction {
+			assert.NotNil(resp)
+
+			if len(test.ExpectedContentType) > 0 {
+				assert.Equal(test.ExpectedContentType, resp.Header.Get("Content-Type"))
+			}
+
+			ident := new(Identitygorm)
+			if err := json.NewDecoder(resp.Body).Decode(ident); err != nil {
+				t.Errorf("error unmarshaling the test response: Err: %v", err)
+			}
+			assert.NoError(err)
+		}
 	}
-
-	// 	assert.Equal(test.StatusCode, resp.StatusCode)
-	// }
 }
