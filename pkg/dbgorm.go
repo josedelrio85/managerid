@@ -9,8 +9,8 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql import driver for gorm
 )
 
-// Rdsgorm is a struct to manage AWS RDS's environment configuration.
-type Rdsgorm struct {
+// Rdsgorm is a struct to manage DB environment configuration.
+type Database struct {
 	Host      string
 	Port      int64
 	User      string
@@ -51,7 +51,7 @@ func (Identitygorm) TableName() string {
 // Open opens a RDS connection using environment variable parameters.
 // This implementation uses gorm library.
 // Returns a db instance and nil if success or nil and Error instance if fails.
-func (rg *Rdsgorm) Open() error {
+func (rg *Database) Open() error {
 	connstr := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=%v&loc=%v",
 		rg.User, rg.Password, rg.Host, rg.Port, rg.DBName, rg.Charset, rg.ParseTime, rg.Loc)
 
@@ -69,13 +69,13 @@ func (rg *Rdsgorm) Open() error {
 	return nil
 }
 
-// Close Rdsgorm.db instance
-func (rg *Rdsgorm) Close() {
+// Close Database.db instance
+func (rg *Database) Close() {
 	rg.db.Close()
 }
 
 // CreateTable blablabla
-func (rg *Rdsgorm) CreateTable() error {
+func (rg *Database) CreateTable() error {
 	rg.db.AutoMigrate(&Identitygorm{})
 
 	if !rg.db.HasTable(&Identitygorm{}) {
@@ -89,7 +89,7 @@ func (rg *Rdsgorm) CreateTable() error {
 // In case of there are some matches for the IP value, checks if complains the time criteria.
 // In matches are returned, returns the identity element. In the other case, generates
 // a new Bysidecar ID, and returns this identity element.
-func (rg *Rdsgorm) CheckIdentity(interaction Interaction) (*Identitygorm, error) {
+func (rg *Database) CheckIdentity(interaction Interaction) (*Identitygorm, error) {
 	ident := new(Identitygorm)
 	err := rg.db.Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
 	if err != nil && !gorm.IsRecordNotFoundError(err) {

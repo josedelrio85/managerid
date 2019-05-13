@@ -52,7 +52,7 @@ func main() {
 		log.Fatalf("Error parsing to string the RDS's port %s, Err: %s", port, err)
 	}
 
-	rds := &idbsc.Rdsgorm{
+	rds := &idbsc.Database{
 		Host:      host,
 		Port:      portInt,
 		User:      user,
