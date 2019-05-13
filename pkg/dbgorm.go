@@ -2,7 +2,6 @@ package idbsc
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql" // go mysql driver
@@ -29,6 +28,8 @@ type Rdsgorm struct {
 type Queriergorm interface {
 	Open() error
 	CheckIdentity(Interaction) (*Identitygorm, error)
+	Close()
+	CreateTable() error
 }
 
 // Identitygorm is a struct that represents an identity element.
@@ -38,12 +39,13 @@ type Identitygorm struct {
 	Application string `sql:"type:VARCHAR(255)"`
 	Idgroup     string `sql:"type:VARCHAR(255)"`
 	ID          string `sql:"type:VARCHAR(255)"`
-	Createdat   *time.Time
+	Createdat   time.Time
 	Ididentity  *int `gorm:"primary_key"`
 }
 
+// TableName sets the default table name
 func (Identitygorm) TableName() string {
-	return "identities_bsc_gorm"
+	return "identities_bsc"
 }
 
 // Open opens a RDS connection using environment variable parameters.
@@ -53,17 +55,12 @@ func (rg *Rdsgorm) Open() error {
 	connstr := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=%v&loc=%v",
 		rg.User, rg.Password, rg.Host, rg.Port, rg.DBName, rg.Charset, rg.ParseTime, rg.Loc)
 
-	log.Println(connstr)
-
 	db, err := gorm.Open("mysql", connstr)
 	if err != nil {
-		log.Println(err)
 		return err
 	}
-	defer db.Close()
 
 	if err = db.DB().Ping(); err != nil {
-		log.Println(err)
 		return err
 	}
 
@@ -72,15 +69,17 @@ func (rg *Rdsgorm) Open() error {
 	return nil
 }
 
+// Close Rdsgorm.db instance
+func (rg *Rdsgorm) Close() {
+	rg.db.Close()
+}
+
 // CreateTable blablabla
 func (rg *Rdsgorm) CreateTable() error {
 	rg.db.AutoMigrate(&Identitygorm{})
 
-	log.Println("--CreateTable--")
 	if !rg.db.HasTable(&Identitygorm{}) {
-		log.Println("--No hay tabla, vamos a crearla--")
 		rg.db.CreateTable(&Identitygorm{})
-		log.Println("--Tabla creada!--")
 	}
 	return nil
 }
@@ -91,16 +90,61 @@ func (rg *Rdsgorm) CreateTable() error {
 // In matches are returned, returns the identity element. In the other case, generates
 // a new Bysidecar ID, and returns this identity element.
 func (rg *Rdsgorm) CheckIdentity(interaction Interaction) (*Identitygorm, error) {
-	// sqlQ := fmt.Sprintf(`select ip, application, provider, idgroup, id, createdat
-	// from identities_bsc where ip = '%s' order by createdat desc limit 1`,
-	// 	interaction.IP)
+	ident := new(Identitygorm)
+	err := rg.db.Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	} else if gorm.IsRecordNotFoundError(err) {
+		// no results, create idgroup and id
+		if err := ident.createIdentity(interaction); err != nil {
+			return nil, err
+		}
+		rg.db.Create(ident)
+		return ident, nil
+	}
 
-	fmt.Println(interaction)
-	// ident := new(Identitygorm)
-	ident := make([]Identitygorm, 0)
-	rg.db.Debug().Where("ip = ?", interaction.IP).Order("createddat desc").First(&ident)
-	// rg.db.Debug().Table("identities_bsc").Find(&ident)
+	// there are at least one match for the IP value, check other conditions
+	twoHoursLess := time.Now().Add(time.Duration(-120) * time.Minute)
 
-	log.Println(ident)
-	return nil, nil
+	err = rg.db.Where("ip = ? and provider = ? and application = ? and createdat > ?",
+		interaction.IP, interaction.Provider, interaction.Application, twoHoursLess.Format("2006-01-02 15:04:05")).First(&ident).Error
+
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	} else if gorm.IsRecordNotFoundError(err) {
+		// generate ID and reuse idgroup
+		uuid, err := getUUID()
+		if err != nil {
+			return nil, err
+		}
+		ident.ID = fmt.Sprintf("%s", uuid)
+		ident.Ididentity = nil
+		ident.Createdat = time.Now()
+
+		rg.db.Create(ident)
+		return ident, nil
+	}
+	// returns the last row that matches the criteria (neither new id or idgroup is created)
+	return ident, nil
+}
+
+func (ident *Identitygorm) createIdentity(interaction Interaction) error {
+
+	uuidgroup, err := getUUID()
+	if err != nil {
+		return err
+	}
+	uuid, err := getUUID()
+	if err != nil {
+		return err
+	}
+
+	ident.Application = interaction.Application
+	ident.IP = interaction.IP
+	ident.Provider = interaction.Provider
+	ident.Createdat = time.Now()
+	ident.ID = fmt.Sprintf("%s", uuid)
+	ident.Idgroup = fmt.Sprintf("%s", uuidgroup)
+
+	return nil
 }
