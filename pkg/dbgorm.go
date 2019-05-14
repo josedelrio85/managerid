@@ -9,7 +9,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql import driver for gorm
 )
 
-// Rdsgorm is a struct to manage DB environment configuration.
+// Database is a struct to manage DB environment configuration.
 type Database struct {
 	Host      string
 	Port      int64
@@ -105,9 +105,13 @@ func (rg *Database) CheckIdentity(interaction Interaction) (*Identitygorm, error
 
 	// there are at least one match for the IP value, check other conditions
 	twoHoursLess := time.Now().Add(time.Duration(-120) * time.Minute)
+	timeFormatted := twoHoursLess.Format("2006-01-02 15:04:05")
 
 	err = rg.db.Where("ip = ? and provider = ? and application = ? and createdat > ?",
-		interaction.IP, interaction.Provider, interaction.Application, twoHoursLess.Format("2006-01-02 15:04:05")).First(&ident).Error
+		interaction.IP,
+		interaction.Provider,
+		interaction.Application,
+		timeFormatted).First(&ident).Error
 
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		return nil, err
