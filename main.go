@@ -35,7 +35,7 @@ func main() {
 		Loc:       "Local",
 	}
 	ch := idbsc.ClientHandler{
-		Queriergorm: rds,
+		Querier: rds,
 	}
 
 	if err := rds.Open(); err != nil {

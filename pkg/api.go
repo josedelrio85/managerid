@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 )
 
 // Interaction is a struct that represents a single interaction in web environment.
@@ -14,23 +13,12 @@ type Interaction struct {
 	Application string `json:"application"`
 }
 
-// Identity is a struct that represents an identity element.
-type Identity struct {
-	IP          string
-	Provider    string
-	Application string
-	Idgroup     string
-	ID          string
-	Createdat   time.Time
-	Ididentity  int
-}
-
 // ClientHandler is a struct created to use its ch property as element that implements
 // http.Handler.Neededed to call HandleFunction as param in router Handler function.
 type ClientHandler struct {
-	ch          http.Handler
-	Interac     Interaction
-	Queriergorm Queriergorm
+	ch      http.Handler
+	Interac Interaction
+	Querier Querier
 }
 
 // HandleFunction is a function used to manage all received requests.
@@ -52,8 +40,7 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			return
 		}
 
-		// identity, err := ch.Querier.CheckIdentity(ch.Interac)
-		identity, err := ch.Queriergorm.CheckIdentity(ch.Interac)
+		identity, err := ch.Querier.CheckIdentity(ch.Interac)
 		if err != nil {
 			message := fmt.Sprintf("error performing interaction's CheckIdentity, err: %v", err)
 			http.Error(w, message, http.StatusInternalServerError)
