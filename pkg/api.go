@@ -40,7 +40,7 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			return
 		}
 
-		identity, err := ch.Querier.CheckIdentity(ch.Interac)
+		identity, err := ch.Querier.GetIdentity(ch.Interac)
 		if err != nil {
 			message := fmt.Sprintf("error performing interaction's CheckIdentity, err: %v", err)
 			http.Error(w, message, http.StatusInternalServerError)
