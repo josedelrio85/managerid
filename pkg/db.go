@@ -24,10 +24,10 @@ type Database struct {
 }
 
 // Querier is an interface used to force client handler to implement
-// Open, CheckIdentity, Close and CreateTable methods
+// Open, GetIdentity, Close and CreateTable methods
 type Querier interface {
 	Open() error
-	CheckIdentity(Interaction) (*Identity, error)
+	GetIdentity(Interaction) (*Identity, error)
 	Close()
 	CreateTable() error
 }
@@ -84,18 +84,15 @@ func (rg *Database) CreateTable() error {
 	return nil
 }
 
-// CheckIdentity queries for matches for the interaction struct passed as parameter.
+// GetIdentity queries for matches for the interaction struct passed as parameter.
 // If no matches are returned, generates a new Identity using insert function.
 // In case of there are some matches for the IP value, checks if complains the time criteria.
-// In matches are returned, returns the identity element. In the other case, generates
-// a new Bysidecar ID, and returns this identity element.
-func (rg *Database) CheckIdentity(interaction Interaction) (*Identity, error) {
-	ident := new(Identity)
-	err := rg.db.Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
-	if err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, err
-	} else if gorm.IsRecordNotFoundError(err) {
-		// no results, create idgroup and id
+// If matches are returned, returns the identity element.
+// In other case, generates a new Bysidecar ID, and returns this identity element.
+func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
+	ident, err := rg.checkIdentity(interaction)
+	// check it there are no results =>  create idgroup and id and store in DB
+	if gorm.IsRecordNotFoundError(err) {
 		if err := ident.createIdentity(interaction); err != nil {
 			return nil, err
 		}
@@ -104,36 +101,32 @@ func (rg *Database) CheckIdentity(interaction Interaction) (*Identity, error) {
 	}
 
 	// there are at least one match for the IP value, check other conditions
-	twoHoursLess := time.Now().Add(time.Duration(-120) * time.Minute)
-	timeFormatted := twoHoursLess.Format("2006-01-02 15:04:05")
-
-	err = rg.db.Where("ip = ? and provider = ? and application = ? and createdat > ?",
-		interaction.IP,
-		interaction.Provider,
-		interaction.Application,
-		timeFormatted).First(&ident).Error
-
-	if err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, err
-	} else if gorm.IsRecordNotFoundError(err) {
-		// generate ID and reuse idgroup
-		uuid, err := getUUID()
-		if err != nil {
+	err = rg.checkIdentitySecondLevel(interaction, ident)
+	// no results for the last 2 hours => generate ID and reuse idgroup
+	if gorm.IsRecordNotFoundError(err) {
+		if err := ident.createIdentitySecondLevel(); err != nil {
 			return nil, err
 		}
-		ident.ID = fmt.Sprintf("%s", uuid)
-		ident.Ididentity = nil
-		ident.Createdat = time.Now()
-
 		rg.db.Create(ident)
-		return ident, nil
 	}
-	// returns the last row that matches the criteria (neither new id or idgroup is created)
+
+	// returns the ident resultant object
 	return ident, nil
 }
 
-func (ident *Identity) createIdentity(interaction Interaction) error {
+// checkIdentity checks if there is any row that matches the IP criteria.
+// returns the matched identity and nil || nil and a IsRecordNotFoundError error
+func (rg *Database) checkIdentity(interaction Interaction) (*Identity, error) {
+	ident := new(Identity)
+	err := rg.db.Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	}
+	return ident, nil
+}
 
+// createIdentity creates an Identity object with proper values
+func (ident *Identity) createIdentity(interaction Interaction) error {
 	uuidgroup, err := getUUID()
 	if err != nil {
 		return err
@@ -149,6 +142,40 @@ func (ident *Identity) createIdentity(interaction Interaction) error {
 	ident.Createdat = time.Now()
 	ident.ID = fmt.Sprintf("%s", uuid)
 	ident.Idgroup = fmt.Sprintf("%s", uuidgroup)
+
+	return nil
+}
+
+// checkIdentitySecondLevel checks if there is any row that matches the
+// IP+Applicaciont+Provider+TwoHourless criteria.
+// returns a pointer to the matched identity || IsRecordNotFoundError error
+func (rg *Database) checkIdentitySecondLevel(interaction Interaction, ident *Identity) error {
+	twoHoursLess := time.Now().Add(time.Duration(-120) * time.Minute)
+	timeFormatted := twoHoursLess.Format("2006-01-02 15:04:05")
+
+	err := rg.db.Where("ip = ? and provider = ? and application = ? and createdat > ?",
+		interaction.IP,
+		interaction.Provider,
+		interaction.Application,
+		timeFormatted).First(&ident).Error
+
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		return err
+	}
+	return nil
+}
+
+// createIdentitySecondLevel creates a new Idbysidecar
+// sets Createdat value to actual time
+// sets Ididentity (PK) to nil to generate a new row in DB
+func (ident *Identity) createIdentitySecondLevel() error {
+	uuid, err := getUUID()
+	if err != nil {
+		return err
+	}
+	ident.ID = fmt.Sprintf("%s", uuid)
+	ident.Ididentity = nil
+	ident.Createdat = time.Now()
 
 	return nil
 }
