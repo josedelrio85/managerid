@@ -6,7 +6,7 @@ import "sync"
 type FakeDb struct {
 	OpenFunc           func() error
 	OpenCalls          int
-	CheckIdentityFunc  func(Interaction) (*Identitygorm, error)
+	CheckIdentityFunc  func(Interaction) (*Identity, error)
 	CheckIdentityCalls int
 	CloseFunc          func() error
 	CloseCalls         int
@@ -25,7 +25,7 @@ func (f *FakeDb) Open() error {
 }
 
 // CheckIdentity is a method to test CheckIdentity function
-func (f *FakeDb) CheckIdentity(interaction Interaction) (*Identitygorm, error) {
+func (f *FakeDb) CheckIdentity(interaction Interaction) (*Identity, error) {
 	f.Lock()
 	defer f.Unlock()
 	f.CheckIdentityCalls++

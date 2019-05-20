@@ -23,17 +23,17 @@ type Database struct {
 	db *gorm.DB
 }
 
-// Queriergorm is an interface used to force client handler to implement
-// Open and CheckIdentity methods
-type Queriergorm interface {
+// Querier is an interface used to force client handler to implement
+// Open, CheckIdentity, Close and CreateTable methods
+type Querier interface {
 	Open() error
-	CheckIdentity(Interaction) (*Identitygorm, error)
+	CheckIdentity(Interaction) (*Identity, error)
 	Close()
 	CreateTable() error
 }
 
-// Identitygorm is a struct that represents an identity element.
-type Identitygorm struct {
+// Identity is a struct that represents an identity element.
+type Identity struct {
 	IP          string `sql:"type:VARCHAR(255)"`
 	Provider    string `sql:"type:VARCHAR(255)"`
 	Application string `sql:"type:VARCHAR(255)"`
@@ -44,7 +44,7 @@ type Identitygorm struct {
 }
 
 // TableName sets the default table name
-func (Identitygorm) TableName() string {
+func (Identity) TableName() string {
 	return "identities_bsc"
 }
 
@@ -76,10 +76,10 @@ func (rg *Database) Close() {
 
 // CreateTable blablabla
 func (rg *Database) CreateTable() error {
-	rg.db.AutoMigrate(&Identitygorm{})
+	rg.db.AutoMigrate(&Identity{})
 
-	if !rg.db.HasTable(&Identitygorm{}) {
-		rg.db.CreateTable(&Identitygorm{})
+	if !rg.db.HasTable(&Identity{}) {
+		rg.db.CreateTable(&Identity{})
 	}
 	return nil
 }
@@ -89,8 +89,8 @@ func (rg *Database) CreateTable() error {
 // In case of there are some matches for the IP value, checks if complains the time criteria.
 // In matches are returned, returns the identity element. In the other case, generates
 // a new Bysidecar ID, and returns this identity element.
-func (rg *Database) CheckIdentity(interaction Interaction) (*Identitygorm, error) {
-	ident := new(Identitygorm)
+func (rg *Database) CheckIdentity(interaction Interaction) (*Identity, error) {
+	ident := new(Identity)
 	err := rg.db.Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		return nil, err
@@ -132,7 +132,7 @@ func (rg *Database) CheckIdentity(interaction Interaction) (*Identitygorm, error
 	return ident, nil
 }
 
-func (ident *Identitygorm) createIdentity(interaction Interaction) error {
+func (ident *Identity) createIdentity(interaction Interaction) error {
 
 	uuidgroup, err := getUUID()
 	if err != nil {

@@ -15,7 +15,7 @@ func TestHandleFunction(t *testing.T) {
 
 	tests := []struct {
 		Description         string
-		Queriergorm         Queriergorm
+		Querier             Querier
 		TypeRequest         string
 		Interaction         Interaction
 		StatusCode          int
@@ -35,9 +35,9 @@ func TestHandleFunction(t *testing.T) {
 				Application: "Test Application",
 				Provider:    "Test Provider",
 			},
-			Queriergorm: &FakeDb{
+			Querier: &FakeDb{
 				OpenFunc:          func() error { return nil },
-				CheckIdentityFunc: func(interaction Interaction) (*Identitygorm, error) { return new(Identitygorm), nil },
+				CheckIdentityFunc: func(interaction Interaction) (*Identity, error) { return new(Identity), nil },
 				CloseFunc:         func() error { return nil },
 				CreateTableFunc:   func() error { return nil },
 			},
@@ -51,9 +51,9 @@ func TestHandleFunction(t *testing.T) {
 				Application: "Test Application",
 				Provider:    "Test Provider",
 			},
-			Queriergorm: &FakeDb{
+			Querier: &FakeDb{
 				OpenFunc:          func() error { return nil },
-				CheckIdentityFunc: func(interaction Interaction) (*Identitygorm, error) { return new(Identitygorm), nil },
+				CheckIdentityFunc: func(interaction Interaction) (*Identity, error) { return new(Identity), nil },
 				CloseFunc:         func() error { return nil },
 				CreateTableFunc:   func() error { return nil },
 			},
@@ -63,7 +63,7 @@ func TestHandleFunction(t *testing.T) {
 
 	for _, test := range tests {
 		ch := ClientHandler{
-			Queriergorm: test.Queriergorm,
+			Querier: test.Querier,
 		}
 		ts := httptest.NewServer(ch.HandleFunction())
 		defer ts.Close()
@@ -96,7 +96,7 @@ func TestHandleFunction(t *testing.T) {
 				assert.Equal(test.ExpectedContentType, resp.Header.Get("Content-Type"))
 			}
 
-			ident := new(Identitygorm)
+			ident := new(Identity)
 			if err := json.NewDecoder(resp.Body).Decode(ident); err != nil {
 				t.Errorf("error unmarshaling the test response: Err: %v", err)
 			}
