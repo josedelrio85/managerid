@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"time"
 )
 
 // Interaction is a struct that represents a single interaction in web environment.
@@ -12,17 +11,6 @@ type Interaction struct {
 	IP          string `json:"ip"`
 	Provider    string `json:"provider"`
 	Application string `json:"application"`
-}
-
-// Identity is a struct that represents an identity element.
-type Identity struct {
-	IP          string
-	Provider    string
-	Application string
-	Idgroup     string
-	ID          string
-	Createdat   time.Time
-	Ididentity  int
 }
 
 // ClientHandler is a struct created to use its ch property as element that implements
@@ -52,13 +40,14 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			return
 		}
 
-		identity, err := ch.Querier.CheckIdentity(ch.Interac)
+		identity, err := ch.Querier.GetIdentity(ch.Interac)
 		if err != nil {
 			message := fmt.Sprintf("error performing interaction's CheckIdentity, err: %v", err)
 			http.Error(w, message, http.StatusInternalServerError)
 			return
 		}
 
+		w.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(identity)
 	})
 }
