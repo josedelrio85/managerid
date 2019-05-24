@@ -1,4 +1,4 @@
-package idbsc
+package passport
 
 import "sync"
 
