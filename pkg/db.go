@@ -1,4 +1,4 @@
-package idbsc
+package passport
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	_ "github.com/go-sql-driver/mysql" // go mysql driver
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/mysql" // mysql import driver for gorm
+	uuid "github.com/satori/go.uuid"
 )
 
 // Database is a struct to manage DB environment configuration.
@@ -127,14 +128,8 @@ func (rg *Database) checkIdentity(interaction Interaction) (*Identity, error) {
 
 // createIdentity creates an Identity object with proper values
 func (ident *Identity) createIdentity(interaction Interaction) error {
-	uuidgroup, err := getUUID()
-	if err != nil {
-		return err
-	}
-	uuid, err := getUUID()
-	if err != nil {
-		return err
-	}
+	uuidgroup := uuid.NewV4()
+	uuid := uuid.NewV4()
 
 	ident.Application = interaction.Application
 	ident.IP = interaction.IP
@@ -169,10 +164,8 @@ func (rg *Database) checkIdentitySecondLevel(interaction Interaction, ident *Ide
 // sets Createdat value to actual time
 // sets Ididentity (PK) to nil to generate a new row in DB
 func (ident *Identity) createIdentitySecondLevel() error {
-	uuid, err := getUUID()
-	if err != nil {
-		return err
-	}
+	uuid := uuid.NewV4()
+
 	ident.ID = fmt.Sprintf("%s", uuid)
 	ident.Ididentity = nil
 	ident.Createdat = time.Now()

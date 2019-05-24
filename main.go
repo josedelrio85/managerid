@@ -6,48 +6,43 @@ import (
 	"os"
 	"strconv"
 
-	idbsc "github.com/bysidecar/idbsc/pkg"
+	passport "github.com/bysidecar/passport/pkg"
 	"github.com/gorilla/mux"
 )
 
 func main() {
-
 	r := mux.NewRouter()
 
-	port, ok := os.LookupEnv("PORT_IDBSC")
-	if !ok {
-		log.Fatal("Init error. Missing PORT_IDBSC ENV VAR")
-	}
-
+	port := GetSetting("DB_PORT")
 	portInt, err := strconv.ParseInt(port, 10, 64)
 	if err != nil {
-		log.Fatalf("Error parsing to string the RDS's port %s, Err: %s", port, err)
+		log.Fatalf("Error parsing to string Database's port %s, Err: %s", port, err)
 	}
 
-	rds := &idbsc.Database{
-		Host:      GetSetting("HOST_IDBSC"),
+	database := &passport.Database{
+		Host:      GetSetting("DB_HOST"),
 		Port:      portInt,
-		User:      GetSetting("USER_IDBSC"),
-		Password:  GetSetting("PASSWORD_IDBSC"),
-		DBName:    GetSetting("DBNAME_IDBSC"),
+		User:      GetSetting("DB_USER"),
+		Password:  GetSetting("DB_PASS"),
+		DBName:    GetSetting("DB_NAME"),
 		Charset:   "utf8",
 		ParseTime: "True",
 		Loc:       "Local",
 	}
-	ch := idbsc.ClientHandler{
-		Querier: rds,
+	ch := passport.ClientHandler{
+		Querier: database,
 	}
 
-	if err := rds.Open(); err != nil {
-		log.Fatalf("error opening redshift's connection. err: %s", err)
+	if err := database.Open(); err != nil {
+		log.Fatalf("error opening database connection. err: %s", err)
 	}
-	defer rds.Close()
+	defer database.Close()
 
-	if err := rds.CreateTable(); err != nil {
+	if err := database.CreateTable(); err != nil {
 		log.Fatalf("error creating the table. err: %s", err)
 	}
 
-	r.PathPrefix("/idbsc/").Handler(ch.HandleFunction())
+	r.PathPrefix("/id/settle").Handler(ch.HandleFunction())
 
 	log.Fatal(http.ListenAndServe(":4000", r))
 }
