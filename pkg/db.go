@@ -35,13 +35,13 @@ type Querier interface {
 
 // Identity is a struct that represents an identity element.
 type Identity struct {
-	IP          string `sql:"type:VARCHAR(255)"`
-	Provider    string `sql:"type:VARCHAR(255)"`
-	Application string `sql:"type:VARCHAR(255)"`
-	Idgroup     string `sql:"type:VARCHAR(255)"`
-	ID          string `sql:"type:VARCHAR(255)"`
-	Createdat   time.Time
-	Ididentity  *int `gorm:"primary_key"`
+	IP          string    `sql:"type:VARCHAR(255)" json:"-"`
+	Provider    string    `sql:"type:VARCHAR(255)" json:"-"`
+	Application string    `sql:"type:VARCHAR(255)" json:"-"`
+	Idgroup     string    `sql:"type:VARCHAR(255)" json:"idgroup"`
+	ID          string    `sql:"type:VARCHAR(255)" json:"idbysidecar"`
+	Createdat   time.Time `json:"-"`
+	Ididentity  *int      `gorm:"primary_key" json:"-"`
 }
 
 // TableName sets the default table name
@@ -91,28 +91,19 @@ func (rg *Database) CreateTable() error {
 // If matches are returned, returns the identity element.
 // In other case, generates a new Bysidecar ID, and returns this identity element.
 func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
-	ident, err := rg.checkIdentity(interaction)
-	// check it there are no results =>  create idgroup and id and store in DB
-	if gorm.IsRecordNotFoundError(err) {
-		if err := ident.createIdentity(interaction); err != nil {
-			return nil, err
-		}
-		rg.db.Create(ident)
+
+	// check if there are no results =>  create idgroup and id and store in DB
+	ident, out, err := rg.checkIdentity(interaction)
+	if err != nil {
+		return nil, err
+	}
+
+	if out {
 		return ident, nil
 	}
 
-	// there are at least one match for the IP value, check other conditions
-	err = rg.checkIdentitySecondLevel(interaction, ident)
-	// no results for the last 2 hours => generate ID and reuse idgroup
-	if gorm.IsRecordNotFoundError(err) {
-		if err := ident.createIdentitySecondLevel(); err != nil {
-			return nil, err
-		}
-		rg.db.Create(ident)
-	}
-	
-	// Returns the error if it is not NotFoundError
-	if err != nil && !gorm.IsRecordNotFoundError(err) {
+	ident, err = rg.checkIdentitySecondLevel(interaction, ident.Idgroup)
+	if err != nil {
 		return nil, err
 	}
 
@@ -121,35 +112,29 @@ func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
 }
 
 // checkIdentity checks if there is any row that matches the IP criteria.
-// returns the matched identity and nil || nil and a IsRecordNotFoundError error
-func (rg *Database) checkIdentity(interaction Interaction) (*Identity, error) {
+// if there are no results, creates a new identity and set out is true to end the execution.
+// returns the identity true|false nil || nil false error
+func (rg *Database) checkIdentity(interaction Interaction) (*Identity, bool, error) {
 	ident := new(Identity)
+	out := false
 	err := rg.db.Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
-		return nil, err
+		return nil, out, err
 	}
-	return ident, err
-}
 
-// createIdentity creates an Identity object with proper values
-func (ident *Identity) createIdentity(interaction Interaction) error {
-	uuidgroup := uuid.NewV4()
-	uuid := uuid.NewV4()
-
-	ident.Application = interaction.Application
-	ident.IP = interaction.IP
-	ident.Provider = interaction.Provider
-	ident.Createdat = time.Now()
-	ident.ID = fmt.Sprintf("%s", uuid)
-	ident.Idgroup = fmt.Sprintf("%s", uuidgroup)
-
-	return nil
+	if gorm.IsRecordNotFoundError(err) {
+		ident.createIdentity(interaction, "")
+		rg.db.Create(ident)
+		out = true
+	}
+	return ident, out, nil
 }
 
 // checkIdentitySecondLevel checks if there is any row that matches the
 // IP+Applicaciont+Provider+TwoHourless criteria.
-// returns a pointer to the matched identity || IsRecordNotFoundError error
-func (rg *Database) checkIdentitySecondLevel(interaction Interaction, ident *Identity) error {
+// returns a pointer to the matched identity
+func (rg *Database) checkIdentitySecondLevel(interaction Interaction, idgroup string) (*Identity, error) {
+	ident := new(Identity)
 	twoHoursLess := time.Now().Add(time.Duration(-120) * time.Minute)
 	timeFormatted := twoHoursLess.Format("2006-01-02 15:04:05")
 
@@ -157,20 +142,33 @@ func (rg *Database) checkIdentitySecondLevel(interaction Interaction, ident *Ide
 		interaction.IP,
 		interaction.Provider,
 		interaction.Application,
-		timeFormatted).First(&ident).Error
+		timeFormatted).Order("createdat desc").First(&ident).Error
 
-	return err
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	}
+
+	if gorm.IsRecordNotFoundError(err) {
+		ident.createIdentity(interaction, idgroup)
+		rg.db.Create(ident)
+	}
+
+	return ident, nil
 }
 
-// createIdentitySecondLevel creates a new Idbysidecar
-// sets Createdat value to actual time
-// sets Ididentity (PK) to nil to generate a new row in DB
-func (ident *Identity) createIdentitySecondLevel() error {
-	uuid := uuid.NewV4()
+// createIdentity creates an Identity object with proper values
+// If idgroup is setted you must use as Idgroup value
+func (ident *Identity) createIdentity(interaction Interaction, idgroup string) {
 
-	ident.ID = fmt.Sprintf("%s", uuid)
-	ident.Ididentity = nil
+	ident.Application = interaction.Application
+	ident.IP = interaction.IP
+	ident.Provider = interaction.Provider
 	ident.Createdat = time.Now()
+	ident.ID = fmt.Sprintf("%s", uuid.NewV4())
+	ident.Idgroup = fmt.Sprintf("%s", uuid.NewV4())
 
-	return nil
+	if idgroup != "" {
+		ident.Ididentity = nil
+		ident.Idgroup = idgroup
+	}
 }
