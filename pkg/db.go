@@ -117,7 +117,7 @@ func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
 func (rg *Database) checkIdentity(interaction Interaction) (*Identity, bool, error) {
 	ident := new(Identity)
 	out := false
-	err := rg.db.Debug().Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
+	err := rg.db.Where("ip = ?", interaction.IP).Order("createdat desc").First(&ident).Error
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		return nil, out, err
 	}
@@ -138,7 +138,7 @@ func (rg *Database) checkIdentitySecondLevel(interaction Interaction, idgroup st
 	twoHoursLess := time.Now().Add(time.Duration(-120) * time.Minute)
 	timeFormatted := twoHoursLess.Format("2006-01-02 15:04:05")
 
-	err := rg.db.Debug().Where("ip = ? and provider = ? and application = ? and createdat > ?",
+	err := rg.db.Where("ip = ? and provider = ? and application = ? and createdat > ?",
 		interaction.IP,
 		interaction.Provider,
 		interaction.Application,
