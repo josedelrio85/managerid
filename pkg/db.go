@@ -110,6 +110,11 @@ func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
 		}
 		rg.db.Create(ident)
 	}
+	
+	// Returns the error if it is not NotFoundError
+	if err != nil && !gorm.IsRecordNotFoundError(err) {
+		return nil, err
+	}
 
 	// returns the ident resultant object
 	return ident, nil
@@ -123,7 +128,7 @@ func (rg *Database) checkIdentity(interaction Interaction) (*Identity, error) {
 	if err != nil && !gorm.IsRecordNotFoundError(err) {
 		return nil, err
 	}
-	return ident, nil
+	return ident, err
 }
 
 // createIdentity creates an Identity object with proper values
@@ -154,10 +159,7 @@ func (rg *Database) checkIdentitySecondLevel(interaction Interaction, ident *Ide
 		interaction.Application,
 		timeFormatted).First(&ident).Error
 
-	if err != nil && !gorm.IsRecordNotFoundError(err) {
-		return err
-	}
-	return nil
+	return err
 }
 
 // createIdentitySecondLevel creates a new Idbysidecar
