@@ -1,6 +1,7 @@
 package passport
 
 import (
+	"log"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -30,12 +31,14 @@ type ClientHandler struct {
 func (ch *ClientHandler) HandleFunction() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
+			log.Println("Method not allowed.", http.StatusMethodNotAllowed)
 			http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
 			return
 		}
 
 		if err := json.NewDecoder(r.Body).Decode(&ch.Interac); err != nil {
 			message := fmt.Sprintf("error decoding interaction payload, err: %v", err)
+			log.Println(message)
 			http.Error(w, message, http.StatusInternalServerError)
 			return
 		}
@@ -43,6 +46,7 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 		identity, err := ch.Querier.GetIdentity(ch.Interac)
 		if err != nil {
 			message := fmt.Sprintf("error performing interaction's CheckIdentity, err: %v", err)
+			log.Println(message)
 			http.Error(w, message, http.StatusInternalServerError)
 			return
 		}
