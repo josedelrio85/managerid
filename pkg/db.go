@@ -75,7 +75,8 @@ func (rg *Database) Close() {
 	rg.db.Close()
 }
 
-// CreateTable blablabla
+// CreateTable automatically migrate your schema, to keep your schema update to date.
+// and create the table if not exists
 func (rg *Database) CreateTable() error {
 	rg.db.AutoMigrate(&Identity{})
 
