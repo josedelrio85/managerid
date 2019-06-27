@@ -15,25 +15,10 @@ jobs:
           name: "Setup custom environment variables"
           command: |
             echo 'export DB_PORT="3306"' >> $BASH_ENV # Redirect MY_ENV_VAR into $BASH_ENV
-            echo 'export DB_HOST="127.0.0.1"' >> $BASH_ENV # Redirect MY_ENV_VAR into $BASH_ENV
-            echo 'export DB_USER="user"' >> $BASH_ENV # Redirect MY_ENV_VAR into $BASH_ENV
-            echo 'export DB_PASS="passw0rd"' >> $BASH_ENV # Redirect MY_ENV_VAR into $BASH_ENV
-            echo 'export DB_NAME="test_db"' >> $BASH_ENV # Redirect MY_ENV_VAR into $BASH_ENV
-      - run:
-          name: "What was my custom environment variable?"
-          command: echo ${DB_PORT}
-      - run:
-          name: "What was my custom environment variable2?"
-          command: echo ${DB_HOST}
-      - run:    
-          name: "What was my custom environment variable3?"
-          command: echo ${DB_USER}
-      - run:    
-          name: "What was my custom environment variable4?"
-          command: echo ${DB_PASS}
-      - run:    
-          name: "What was my custom environment variable5?"
-          command: echo ${DB_NAME} 
+            echo 'export DB_HOST="127.0.0.1"' >> $BASH_ENV
+            echo 'export DB_USER="user"' >> $BASH_ENV
+            echo 'export DB_PASS="passw0rd"' >> $BASH_ENV
+            echo 'export DB_NAME="test_db"' >> $BASH_ENV
       - run:
       # Our primary container isn't MYSQL so run a sleep command until it's ready.
           name: Waiting for MySQL to be ready
@@ -46,12 +31,10 @@ jobs:
             done
             echo Failed waiting for MySQL && exit 1
       - run:
-          name: Install MySQL CLI; Import dummy data; run an example query
+          name: Install MySQL CLI; Create table for tests
           command: |
             sudo apt-get install mysql-client
             mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} ${DB_NAME} < sql_test/test.sql
-            # mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} --execute="SELECT * FROM test_db.Persons"
-      - run: ls -la 
       - run:
           name: Execute go function
           command: |
