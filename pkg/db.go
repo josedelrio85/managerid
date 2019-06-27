@@ -113,7 +113,7 @@ func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
 }
 
 // checkIdentity checks if there is any row that matches the IP criteria.
-// if there are no results, creates a new identity and set out is true to end the execution.
+// if there are no results, creates a new identity and set out to true to end the execution.
 // returns the identity true|false nil || nil false error
 func (rg *Database) checkIdentity(interaction Interaction) (*Identity, bool, error) {
 	ident := new(Identity)
