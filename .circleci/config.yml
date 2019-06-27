@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build1:
+  test:
     docker:
       - image: circleci/golang:1.12
       - image: circleci/mysql:5.7
@@ -58,7 +58,7 @@ jobs:
             go fmt ./...
             go vet ./...
             go test -v ./...
-  build2:
+  build:
     machine: true
     steps:
       - checkout
@@ -91,7 +91,9 @@ jobs:
             docker push $IMAGE_NAME_LATEST
 workflows:
   version: 2
-  build-deploy:
+  test-build-deploy:
     jobs:
-      - build1
-      - build2
+      - test
+      - build
+        requires:
+          - test
