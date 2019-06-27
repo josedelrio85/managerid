@@ -49,8 +49,8 @@ jobs:
           name: Install MySQL CLI; Import dummy data; run an example query
           command: |
             sudo apt-get install mysql-client
-            mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} ${DB_NAME} < sql-data/dummy.sql
-            mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} --execute="SELECT * FROM test_db.Persons"
+            mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} ${DB_NAME} < sql_test/test.sql
+            # mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} --execute="SELECT * FROM test_db.Persons"
       - run: ls -la 
       - run:
           name: Execute go function
