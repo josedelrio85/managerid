@@ -17,6 +17,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+var dbInstance Database
+var identities []Identity
+
+func TestMain(m *testing.M) {
+	dbInstance = helperDb()
+	identities = populateDb(2)
+
+	code := m.Run()
+
+	setDownDb()
+
+	os.Exit(code)
+}
+
 func TestHandleFunction(t *testing.T) {
 	assert := assert.New(t)
 
@@ -137,9 +151,7 @@ func TestHandleFunction(t *testing.T) {
 func TestOpenDb(t *testing.T) {
 	assert := assert.New(t)
 
-	database := helperDb()
-
-	err := database.Open()
+	err := dbInstance.Open()
 
 	assert.NoError(err)
 }
@@ -147,22 +159,14 @@ func TestOpenDb(t *testing.T) {
 func TestCreateIdentity(t *testing.T) {
 	assert := assert.New(t)
 
-	database := helperDb()
-	if err := database.Open(); err != nil {
-		t.Errorf("error opening database connection. err: %s", err)
-	}
-	defer database.Close()
-
 	tests := []struct {
 		Description string
-		Database    Database
 		Interaction Interaction
 		Identity    Identity
 		Idgroup     string
 	}{
 		{
 			Description: "",
-			Database:    database,
 			Interaction: Interaction{
 				IP:          "127.0.0.1",
 				Provider:    "Test",
@@ -173,7 +177,6 @@ func TestCreateIdentity(t *testing.T) {
 		},
 		{
 			Description: "",
-			Database:    database,
 			Interaction: Interaction{
 				IP:          "127.0.0.1",
 				Provider:    "Test",
@@ -200,78 +203,16 @@ func TestCreateIdentity(t *testing.T) {
 func TestCheckIdentity(t *testing.T) {
 	assert := assert.New(t)
 
-	database := helperDb()
-	if err := database.Open(); err != nil {
+	if err := dbInstance.Open(); err != nil {
 		t.Errorf("error opening database connection. err: %s", err)
 	}
-	defer database.Close()
 
-	createdIdentity := populateDb(false)
-
-	tests := []struct {
-		Description string
-		Database    Database
-		Interaction Interaction
-		Expectedout bool
-		Idgroup     string
-	}{
-		{
-			Description: "Case 1 IP value has coincidences",
-			Database:    database,
-			Interaction: Interaction{
-				IP:          createdIdentity.IP,
-				Provider:    createdIdentity.Provider,
-				Application: createdIdentity.Application,
-			},
-			Expectedout: false,
-			Idgroup:     createdIdentity.Idgroup,
-		},
-		// {
-		// 	Description: "Case 2 IP value has not coincidences",
-		// 	Database:    database,
-		// 	Interaction: Interaction{
-		// 		IP:          helperRandstring(10),
-		// 		Provider:    "Test",
-		// 		Application: "Test",
-		// 	},
-		// 	Expectedout: true,
-		// },
-	}
-
-	for _, test := range tests {
-		ident, out, err := database.checkIdentity(test.Interaction)
-
-		assert.Equal(ident.IP, test.Interaction.IP)
-		assert.Equal(ident.Provider, test.Interaction.Provider)
-		assert.Equal(ident.Application, test.Interaction.Application)
-
-		if out {
-			assert.NotNil(ident.Idgroup)
-			assert.NotNil(ident.Ididentity)
-			assert.NotNil(ident.ID)
-			database.db.Delete(&ident)
-		} else {
-			assert.Equal(ident.Idgroup, test.Idgroup)
+	var idt Identity
+	for i, z := range identities {
+		if i%2 != 0 {
+			idt = z
 		}
-
-		assert.Equal(out, test.Expectedout)
-		assert.NoError(err)
 	}
-
-	setDownDb(createdIdentity, database)
-}
-
-func TestCheckIdentitySecondLevel(t *testing.T) {
-	assert := assert.New(t)
-
-	database := helperDb()
-	if err := database.Open(); err != nil {
-		t.Errorf("error opening database connection. err: %s", err)
-	}
-	defer database.Close()
-
-	createdIdentity := populateDb(true)
-	createdIdentity2 := populateDb(false)
 
 	tests := []struct {
 		Description string
@@ -282,33 +223,99 @@ func TestCheckIdentitySecondLevel(t *testing.T) {
 		ID          string
 	}{
 		{
-			Description: "Case 1 is outside the time criteria [createdat < (now -2h)]. Should create new registry with same values except ID value",
-			Database:    database,
+			Description: "Case 1 IP value has coincidences. Should not create any registry, reuse the matched result.",
 			Interaction: Interaction{
-				IP:          createdIdentity.IP,
-				Provider:    createdIdentity.Provider,
-				Application: createdIdentity.Application,
+				IP:          idt.IP,
+				Provider:    idt.Provider,
+				Application: idt.Application,
 			},
 			Expectedout: false,
-			Idgroup:     createdIdentity.Idgroup,
-			ID:          createdIdentity.ID,
+			Idgroup:     idt.Idgroup,
+			ID:          idt.ID,
 		},
 		{
-			Description: "Case 2 is inside the time criteria [createdat < (now -2h)]. Should not create any registry, reuse the matched result. ID values must be equal",
-			Database:    database,
+			Description: "Case 2 IP value has not coincidences. Should create new registry.",
 			Interaction: Interaction{
-				IP:          createdIdentity2.IP,
-				Provider:    createdIdentity2.Provider,
-				Application: createdIdentity2.Application,
+				IP:          helperRandstring(10),
+				Provider:    "Test",
+				Application: "Test",
 			},
 			Expectedout: true,
-			Idgroup:     createdIdentity2.Idgroup,
-			ID:          createdIdentity2.ID,
 		},
 	}
 
 	for _, test := range tests {
-		ident, err := database.checkIdentitySecondLevel(test.Interaction, test.Idgroup)
+		ident, out, err := dbInstance.checkIdentity(test.Interaction)
+
+		assert.Equal(ident.IP, test.Interaction.IP)
+		assert.Equal(ident.Provider, test.Interaction.Provider)
+		assert.Equal(ident.Application, test.Interaction.Application)
+
+		if out {
+			assert.NotNil(ident.Idgroup)
+			assert.NotNil(ident.Ididentity)
+			assert.NotNil(ident.ID)
+			assert.NotEqual(ident.ID, test.ID)
+			identities = append(identities, *ident)
+		} else {
+			assert.Equal(ident.Idgroup, test.Idgroup)
+			assert.Equal(ident.ID, test.ID)
+		}
+		assert.Equal(out, test.Expectedout)
+		assert.NoError(err)
+	}
+}
+
+func TestCheckIdentitySecondLevel(t *testing.T) {
+	assert := assert.New(t)
+
+	if err := dbInstance.Open(); err != nil {
+		t.Errorf("error opening database connection. err: %s", err)
+	}
+
+	var ident1 Identity
+	var ident2 Identity
+	for i, z := range identities {
+		if i%2 == 0 {
+			ident2 = z
+		} else {
+			ident1 = z
+		}
+	}
+
+	tests := []struct {
+		Description string
+		Interaction Interaction
+		Expectedout bool
+		Idgroup     string
+		ID          string
+	}{
+		{
+			Description: "Case 1 is outside the time criteria [createdat < (now -2h)]. Should create new registry with same values except ID value",
+			Interaction: Interaction{
+				IP:          ident1.IP,
+				Provider:    ident1.Provider,
+				Application: ident1.Application,
+			},
+			Expectedout: false,
+			Idgroup:     ident1.Idgroup,
+			ID:          ident1.ID,
+		},
+		{
+			Description: "Case 2 is inside the time criteria [createdat < (now -2h)]. Should not create any registry, reuse the matched result. ID values must be equal",
+			Interaction: Interaction{
+				IP:          ident2.IP,
+				Provider:    ident2.Provider,
+				Application: ident2.Application,
+			},
+			Expectedout: true,
+			Idgroup:     ident2.Idgroup,
+			ID:          ident2.ID,
+		},
+	}
+
+	for _, test := range tests {
+		ident, err := dbInstance.checkIdentitySecondLevel(test.Interaction, test.Idgroup)
 
 		assert.Equal(ident.IP, test.Interaction.IP)
 		assert.Equal(ident.Application, test.Interaction.Application)
@@ -319,21 +326,11 @@ func TestCheckIdentitySecondLevel(t *testing.T) {
 		} else {
 			assert.Equal(ident.Idgroup, test.Idgroup)
 			assert.NotEqual(ident.ID, test.ID)
-			database.db.Delete(&ident)
+			// dbInstance.db.Delete(&ident)
+			identities = append(identities, *ident)
 		}
 		assert.NoError(err)
 	}
-	setDownDb(createdIdentity, database)
-	setDownDb(createdIdentity2, database)
-}
-
-func getSetting(setting string) string {
-	value, ok := os.LookupEnv(setting)
-	if !ok {
-		log.Fatalf("Init error, %s ENV var not found", setting)
-	}
-
-	return value
 }
 
 func helperDb() Database {
@@ -353,8 +350,56 @@ func helperDb() Database {
 		ParseTime: "True",
 		Loc:       "Local",
 	}
-
 	return database
+}
+
+func populateDb(number int) []Identity {
+	if err := dbInstance.Open(); err != nil {
+		log.Printf("error opening database connection. err: %s", err)
+		return []Identity{}
+	}
+	defer dbInstance.Close()
+
+	for i := 1; i <= number; i++ {
+		hour := time.Now()
+		if i%2 == 0 {
+			hour = time.Now().Add(time.Duration(-150) * time.Minute)
+		}
+
+		ident := Identity{
+			IP:          helperRandstring(10),
+			Provider:    "TestProv",
+			Application: "TestApp",
+			Idgroup:     fmt.Sprintf("%s", uuid.NewV4()),
+			ID:          fmt.Sprintf("%s", uuid.NewV4()),
+			Createdat:   hour,
+		}
+
+		dbInstance.db.Create(&ident)
+		identities = append(identities, ident)
+	}
+	return identities
+}
+
+func setDownDb() {
+
+	if err := dbInstance.Open(); err != nil {
+		log.Printf("error opening database connection. err: %s", err)
+	}
+	defer dbInstance.Close()
+
+	for _, ident := range identities {
+		dbInstance.db.Delete(&ident)
+	}
+}
+
+func getSetting(setting string) string {
+	value, ok := os.LookupEnv(setting)
+	if !ok {
+		log.Fatalf("Init error, %s ENV var not found", setting)
+	}
+
+	return value
 }
 
 func helperRandstring(length int) string {
@@ -369,35 +414,4 @@ func helperRandstring(length int) string {
 		b[i] = charset[seededRand.Intn(len(charset))]
 	}
 	return string(b)
-}
-
-func populateDb(setTime bool) Identity {
-	database := helperDb()
-	if err := database.Open(); err != nil {
-		log.Printf("error opening database connection. err: %s", err)
-		return Identity{}
-	}
-	defer database.Close()
-
-	hour := time.Now()
-	if setTime {
-		hour = time.Now().Add(time.Duration(-150) * time.Minute)
-	}
-
-	ident := Identity{
-		IP:          helperRandstring(10),
-		Provider:    "TestProv",
-		Application: "TestApp",
-		Idgroup:     fmt.Sprintf("%s", uuid.NewV4()),
-		ID:          fmt.Sprintf("%s", uuid.NewV4()),
-		Createdat:   hour,
-	}
-
-	database.db.Create(&ident)
-
-	return ident
-}
-
-func setDownDb(ident Identity, database Database) {
-	database.db.Delete(&ident)
 }
