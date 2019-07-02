@@ -75,7 +75,8 @@ func (rg *Database) Close() {
 	rg.db.Close()
 }
 
-// CreateTable blablabla
+// CreateTable automatically migrate your schema, to keep your schema update to date.
+// and create the table if not exists
 func (rg *Database) CreateTable() error {
 	rg.db.AutoMigrate(&Identity{})
 
@@ -112,7 +113,7 @@ func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
 }
 
 // checkIdentity checks if there is any row that matches the IP criteria.
-// if there are no results, creates a new identity and set out is true to end the execution.
+// if there are no results, creates a new identity and set out to true to end the execution.
 // returns the identity true|false nil || nil false error
 func (rg *Database) checkIdentity(interaction Interaction) (*Identity, bool, error) {
 	ident := new(Identity)
