@@ -53,6 +53,7 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			http.Error(w, message, http.StatusInternalServerError)
 			return
 		}
+		log.Println(identity)
 
 		w.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(identity)
