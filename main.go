@@ -45,7 +45,6 @@ func main() {
 
 	r.PathPrefix("/id/settle").Handler(ch.HandleFunction())
 
-	// log.Fatal(http.ListenAndServe(":4000", r))
 	log.Fatal(http.ListenAndServe(":4000", cors.Default().Handler(r)))
 
 }

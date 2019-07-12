@@ -43,9 +43,6 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			return
 		}
 
-		log.Println("Testing...")
-		log.Println(ch.Interac)
-
 		identity, err := ch.Querier.GetIdentity(ch.Interac)
 		if err != nil {
 			message := fmt.Sprintf("error performing interaction's CheckIdentity, err: %v", err)
@@ -53,7 +50,6 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			http.Error(w, message, http.StatusInternalServerError)
 			return
 		}
-		log.Println(identity)
 
 		w.Header().Add("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(identity)
