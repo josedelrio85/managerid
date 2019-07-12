@@ -36,15 +36,15 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			return
 		}
 
-		log.Println("Testing...")
-		log.Println(ch.Interac)
-
 		if err := json.NewDecoder(r.Body).Decode(&ch.Interac); err != nil {
 			message := fmt.Sprintf("error decoding interaction payload, err: %v", err)
 			log.Println(message)
 			http.Error(w, message, http.StatusInternalServerError)
 			return
 		}
+
+		log.Println("Testing...")
+		log.Println(ch.Interac)
 
 		identity, err := ch.Querier.GetIdentity(ch.Interac)
 		if err != nil {
