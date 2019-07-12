@@ -1,9 +1,9 @@
 package passport
 
 import (
-	"log"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -35,6 +35,9 @@ func (ch *ClientHandler) HandleFunction() http.Handler {
 			http.Error(w, "Method not allowed.", http.StatusMethodNotAllowed)
 			return
 		}
+
+		log.Println("Testing...")
+		log.Println(ch.Interac)
 
 		if err := json.NewDecoder(r.Body).Decode(&ch.Interac); err != nil {
 			message := fmt.Sprintf("error decoding interaction payload, err: %v", err)
