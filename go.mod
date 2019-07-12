@@ -8,6 +8,7 @@ require (
 	github.com/gorilla/mux v1.7.2
 	github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6 // indirect
 	github.com/jinzhu/gorm v1.9.8
+	github.com/rs/cors v1.6.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/testify v1.2.2
 	golang.org/x/arch v0.0.0-20190312162104-788fe5ffcd8c // indirect
