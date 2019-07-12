@@ -11,6 +11,8 @@ github.com/jinzhu/gorm/dialects/mysql
 github.com/jinzhu/inflection
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
+# github.com/rs/cors v1.6.0
+github.com/rs/cors
 # github.com/satori/go.uuid v1.2.0
 github.com/satori/go.uuid
 # github.com/stretchr/testify v1.2.2
