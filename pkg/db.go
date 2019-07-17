@@ -35,13 +35,13 @@ type Querier interface {
 
 // Identity is a struct that represents an identity element.
 type Identity struct {
-	IP          string    `sql:"type:VARCHAR(255)" json:"-"`
-	Provider    string    `sql:"type:VARCHAR(255)" json:"-"`
-	Application string    `sql:"type:VARCHAR(255)" json:"-"`
-	Idgroup     string    `sql:"type:VARCHAR(255)" json:"idgroup"`
-	ID          string    `sql:"type:VARCHAR(255)" json:"idbysidecar"`
-	Createdat   time.Time `json:"-"`
-	Ididentity  *int      `gorm:"primary_key" json:"-"`
+	IP            string    `sql:"type:VARCHAR(255)" json:"-"`
+	Provider      string    `sql:"type:VARCHAR(255)" json:"-"`
+	Application   string    `sql:"type:VARCHAR(255)" json:"-"`
+	PassportIDGrp string    `sql:"type:VARCHAR(255)" json:"passport_id_group"`
+	PassportID    string    `sql:"type:VARCHAR(255)" json:"passport_id"`
+	Createdat     time.Time `json:"-"`
+	Ididentity    *int      `gorm:"primary_key" json:"-"`
 }
 
 // TableName sets the default table name
@@ -103,7 +103,7 @@ func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
 		return ident, nil
 	}
 
-	ident, err = rg.checkIdentitySecondLevel(interaction, ident.Idgroup)
+	ident, err = rg.checkIdentitySecondLevel(interaction, ident.PassportIDGrp)
 	if err != nil {
 		return nil, err
 	}
@@ -165,11 +165,11 @@ func (ident *Identity) createIdentity(interaction Interaction, idgroup string) {
 	ident.IP = interaction.IP
 	ident.Provider = interaction.Provider
 	ident.Createdat = time.Now()
-	ident.ID = fmt.Sprintf("%s", uuid.NewV4())
-	ident.Idgroup = fmt.Sprintf("%s", uuid.NewV4())
+	ident.PassportID = fmt.Sprintf("%s", uuid.NewV4())
+	ident.PassportIDGrp = fmt.Sprintf("%s", uuid.NewV4())
 
 	if idgroup != "" {
 		ident.Ididentity = nil
-		ident.Idgroup = idgroup
+		ident.PassportIDGrp = idgroup
 	}
 }
