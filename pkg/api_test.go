@@ -97,11 +97,6 @@ func TestHandleFunction(t *testing.T) {
 			},
 			ExpectedContentType: "application/json",
 		},
-		// TODO| Test possible returned values for checkIdentity function
-		// TODO| For an existent IP value => Returns an Identity struct => Identity {}
-		// TODO| Create a flow diagram to represent the steps and the results that should return
-		// TODO| and implement this logic in the tests.
-
 	}
 
 	for _, test := range tests {
