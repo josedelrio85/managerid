@@ -160,10 +160,10 @@ func TestCreateIdentity(t *testing.T) {
 	assert := assert.New(t)
 
 	tests := []struct {
-		Description string
-		Interaction Interaction
-		Identity    Identity
-		Idgroup     string
+		Description   string
+		Interaction   Interaction
+		Identity      Identity
+		PassportIDGrp string
 	}{
 		{
 			Description: "",
@@ -172,8 +172,8 @@ func TestCreateIdentity(t *testing.T) {
 				Provider:    "Test",
 				Application: "Test",
 			},
-			Identity: Identity{},
-			Idgroup:  "546dfa5sd4f6asd54f6as5d4f",
+			Identity:      Identity{},
+			PassportIDGrp: "546dfa5sd4f6asd54f6as5d4f",
 		},
 		{
 			Description: "",
@@ -182,20 +182,20 @@ func TestCreateIdentity(t *testing.T) {
 				Provider:    "Test",
 				Application: "Test",
 			},
-			Identity: Identity{},
-			Idgroup:  "",
+			Identity:      Identity{},
+			PassportIDGrp: "",
 		},
 	}
 
 	for _, test := range tests {
-		test.Identity.createIdentity(test.Interaction, test.Idgroup)
+		test.Identity.createIdentity(test.Interaction, test.PassportIDGrp)
 
 		assert.Equal(test.Identity.Application, test.Interaction.Application)
 		assert.Equal(test.Identity.IP, test.Interaction.IP)
 		assert.Equal(test.Identity.Provider, test.Interaction.Provider)
 
-		if test.Idgroup != "" {
-			assert.Equal(test.Identity.Idgroup, test.Idgroup)
+		if test.PassportIDGrp != "" {
+			assert.Equal(test.Identity.PassportIDGrp, test.PassportIDGrp)
 		}
 	}
 }
@@ -215,12 +215,12 @@ func TestCheckIdentity(t *testing.T) {
 	}
 
 	tests := []struct {
-		Description string
-		Database    Database
-		Interaction Interaction
-		Expectedout bool
-		Idgroup     string
-		ID          string
+		Description   string
+		Database      Database
+		Interaction   Interaction
+		Expectedout   bool
+		PassportIDGrp string
+		PassportID    string
 	}{
 		{
 			Description: "Case 1 IP value has coincidences. Should not create any registry, reuse the matched result.",
@@ -229,9 +229,9 @@ func TestCheckIdentity(t *testing.T) {
 				Provider:    idt.Provider,
 				Application: idt.Application,
 			},
-			Expectedout: false,
-			Idgroup:     idt.Idgroup,
-			ID:          idt.ID,
+			Expectedout:   false,
+			PassportIDGrp: idt.PassportIDGrp,
+			PassportID:    idt.PassportID,
 		},
 		{
 			Description: "Case 2 IP value has not coincidences. Should create new registry.",
@@ -252,14 +252,14 @@ func TestCheckIdentity(t *testing.T) {
 		assert.Equal(ident.Application, test.Interaction.Application)
 
 		if out {
-			assert.NotNil(ident.Idgroup)
+			assert.NotNil(ident.PassportIDGrp)
 			assert.NotNil(ident.Ididentity)
-			assert.NotNil(ident.ID)
-			assert.NotEqual(ident.ID, test.ID)
+			assert.NotNil(ident.PassportID)
+			assert.NotEqual(ident.PassportID, test.PassportID)
 			identities = append(identities, *ident)
 		} else {
-			assert.Equal(ident.Idgroup, test.Idgroup)
-			assert.Equal(ident.ID, test.ID)
+			assert.Equal(ident.PassportIDGrp, test.PassportIDGrp)
+			assert.Equal(ident.PassportID, test.PassportID)
 		}
 		assert.Equal(out, test.Expectedout)
 		assert.NoError(err)
@@ -284,11 +284,11 @@ func TestCheckIdentitySecondLevel(t *testing.T) {
 	}
 
 	tests := []struct {
-		Description string
-		Interaction Interaction
-		Expectedout bool
-		Idgroup     string
-		ID          string
+		Description   string
+		Interaction   Interaction
+		Expectedout   bool
+		PassportIDGrp string
+		PassportID    string
 	}{
 		{
 			Description: "Case 1 is outside the time criteria [createdat < (now -2h)]. Should create new registry with same values except ID value",
@@ -297,9 +297,9 @@ func TestCheckIdentitySecondLevel(t *testing.T) {
 				Provider:    ident1.Provider,
 				Application: ident1.Application,
 			},
-			Expectedout: false,
-			Idgroup:     ident1.Idgroup,
-			ID:          ident1.ID,
+			Expectedout:   false,
+			PassportIDGrp: ident1.PassportIDGrp,
+			PassportID:    ident1.PassportID,
 		},
 		{
 			Description: "Case 2 is inside the time criteria [createdat < (now -2h)]. Should not create any registry, reuse the matched result. ID values must be equal",
@@ -308,24 +308,24 @@ func TestCheckIdentitySecondLevel(t *testing.T) {
 				Provider:    ident2.Provider,
 				Application: ident2.Application,
 			},
-			Expectedout: true,
-			Idgroup:     ident2.Idgroup,
-			ID:          ident2.ID,
+			Expectedout:   true,
+			PassportIDGrp: ident2.PassportIDGrp,
+			PassportID:    ident2.PassportID,
 		},
 	}
 
 	for _, test := range tests {
-		ident, err := dbInstance.checkIdentitySecondLevel(test.Interaction, test.Idgroup)
+		ident, err := dbInstance.checkIdentitySecondLevel(test.Interaction, test.PassportIDGrp)
 
 		assert.Equal(ident.IP, test.Interaction.IP)
 		assert.Equal(ident.Application, test.Interaction.Application)
 		assert.Equal(ident.Provider, test.Interaction.Provider)
 
 		if test.Expectedout {
-			assert.Equal(ident.ID, test.ID)
+			assert.Equal(ident.PassportID, test.PassportID)
 		} else {
-			assert.Equal(ident.Idgroup, test.Idgroup)
-			assert.NotEqual(ident.ID, test.ID)
+			assert.Equal(ident.PassportIDGrp, test.PassportIDGrp)
+			assert.NotEqual(ident.PassportID, test.PassportID)
 			// dbInstance.db.Delete(&ident)
 			identities = append(identities, *ident)
 		}
@@ -366,13 +366,18 @@ func populateDb(number int) []Identity {
 			hour = time.Now().Add(time.Duration(-150) * time.Minute)
 		}
 
+		if err := dbInstance.CreateTable(); err != nil {
+			log.Printf("error creating the table. err: %s", err)
+			return []Identity{}
+		}
+
 		ident := Identity{
-			IP:          helperRandstring(10),
-			Provider:    "TestProv",
-			Application: "TestApp",
-			Idgroup:     fmt.Sprintf("%s", uuid.NewV4()),
-			ID:          fmt.Sprintf("%s", uuid.NewV4()),
-			Createdat:   hour,
+			IP:            helperRandstring(10),
+			Provider:      "TestProv",
+			Application:   "TestApp",
+			PassportIDGrp: fmt.Sprintf("%s", uuid.NewV4()),
+			PassportID:    fmt.Sprintf("%s", uuid.NewV4()),
+			Createdat:     hour,
 		}
 
 		dbInstance.db.Create(&ident)
