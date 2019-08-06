@@ -18,14 +18,14 @@ ingress:
   paths:
     - /
   hosts:
-    - passport-pre.bysidecar.me
+    - passport.bysidecar.me
   tls:
-    - secretName: tls-passport-pre-bysidecar-me
+    - secretName: tls-passport-bysidecar-me
       hosts:
-        - passport-pre.bysidecar.me
+        - passport.bysidecar.me
 env:
 - name: DB_HOST
-  value: "passport-pre.c848y92oajny.eu-west-1.rds.amazonaws.com"
+  value: "passport.c848y92oajny.eu-west-1.rds.amazonaws.com"
 - name: DB_PORT
   value: "3306"
 - name: DB_NAME
