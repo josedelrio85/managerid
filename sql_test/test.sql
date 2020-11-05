@@ -1,4 +1,4 @@
-CREATE TABLE `identities` (
+CREATE TABLE `identities_bsc` (
   `ip` varchar(45) CHARACTER SET utf8 COLLATE utf8_spanish_ci DEFAULT NULL,
   `provider` varchar(255) COLLATE utf8_spanish_ci DEFAULT NULL,
   `application` varchar(255) COLLATE utf8_spanish_ci DEFAULT NULL,

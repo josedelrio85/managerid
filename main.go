@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
+	passport "github.com/bysidecar/passport/pkg"
 	"github.com/gorilla/mux"
-	managerid "github.com/josedelrio85/managerid"
 	"github.com/rs/cors"
 )
 
@@ -20,7 +20,7 @@ func main() {
 		log.Fatalf("Error parsing to string Database's port %s, Err: %s", port, err)
 	}
 
-	database := &managerid.Database{
+	database := &passport.Database{
 		Host:      GetSetting("DB_HOST"),
 		Port:      portInt,
 		User:      GetSetting("DB_USER"),
@@ -30,7 +30,7 @@ func main() {
 		ParseTime: "True",
 		Loc:       "Local",
 	}
-	ch := managerid.ClientHandler{
+	ch := passport.ClientHandler{
 		Querier: database,
 	}
 
