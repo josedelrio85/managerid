@@ -1,14 +1,19 @@
-# ManagerID
+# Passport 
 
-ManagerID is an approach to an ID manager used to identify visitors in our landing pages & services. 
+Passport is BySidecar's leads ID manager used to identify visitors in our landing pages & services. 
 
 ![Passport image](https://i.imgur.com/C1H1E00.jpg)
 
 ## Installation
 
-ManagerID needs `go` installed and it uses a MySQL database, that will be auto-initialized the first time that the service runs.
+Passport needs `go` installed and it uses a MySQL database, that will be auto-initialized the first time that the service runs.
 
-#### 1 - Launch  binary HTTP server
+#### 1 - Clone this repository
+```bash
+git clone git@github.com:bySidecar/passport.git
+```
+
+#### 2 - Launch passport binary HTTP server
 ```bash
 # You will need the following ENV VARS:
 
@@ -23,7 +28,7 @@ go run main.go
 
 
 ##  Usage
-You can use ManagerID's API, on the following endpoint:
+You can use passport's API, on the following endpoint:
 
 ### `POST` `/id/settle`
 

@@ -1,4 +1,4 @@
-package managerid
+package passport
 
 import "sync"
 
