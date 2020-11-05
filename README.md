@@ -1,6 +1,6 @@
-# Passport 
+# ManagerID 
 
-Passport is BySidecar's leads ID manager used to identify visitors in our landing pages & services. 
+ManagerID is a tool to use as lead ID manager, with the goal to identify visitors in landing pages & services. 
 
 ![Passport image](https://i.imgur.com/C1H1E00.jpg)
 
@@ -10,7 +10,7 @@ Passport needs `go` installed and it uses a MySQL database, that will be auto-in
 
 #### 1 - Clone this repository
 ```bash
-git clone git@github.com:bySidecar/passport.git
+git clone git@github.com:josedelrio85/passport.git
 ```
 
 #### 2 - Launch passport binary HTTP server

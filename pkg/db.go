@@ -90,7 +90,7 @@ func (rg *Database) CreateTable() error {
 // If no matches are returned, generates a new Identity using insert function.
 // In case of there are some matches for the IP value, checks if complains the time criteria.
 // If matches are returned, returns the identity element.
-// In other case, generates a new Bysidecar ID, and returns this identity element.
+// In other case, generates a new ID, and returns this identity element.
 func (rg *Database) GetIdentity(interaction Interaction) (*Identity, error) {
 
 	// check if there are no results =>  create idgroup and id and store in DB
