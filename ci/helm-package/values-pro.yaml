@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: 952729869933.dkr.ecr.eu-west-1.amazonaws.com/passport
+  repository: 952729869933.dkr.ecr.eu-west-1.amazonaws.com/managerid
   tag: latest
   pullPolicy: IfNotPresent
 
@@ -18,27 +18,27 @@ ingress:
   paths:
     - /
   hosts:
-    - passport.bysidecar.me
+    - managerid.josedelrio.me
   tls:
-    - secretName: tls-passport-bysidecar-me
+    - secretName: tls-managerid-josedelrio-me
       hosts:
-        - passport.bysidecar.me
+        - managerid.josedelrio.me
 env:
 - name: DB_HOST
-  value: "passport.c848y92oajny.eu-west-1.rds.amazonaws.com"
+  value: "managerid.c848y92oajny.eu-west-1.rds.amazonaws.com"
 - name: DB_PORT
   value: "3306"
 - name: DB_NAME
-  value: "passport"
+  value: "managerid"
 - name: DB_USER
   valueFrom:
     secretKeyRef:
-      name: passport-database
+      name: managerid-database
       key: user
 - name: DB_PASS
   valueFrom:
     secretKeyRef:
-      name: passport-database
+      name: managerid-database
       key: pass
 
 resources: {}
