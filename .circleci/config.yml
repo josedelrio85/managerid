@@ -48,7 +48,7 @@ jobs:
           name: Install dependencies
           working_directory: /
           command: |
-            # install AWS CLI to interact with BySidecar's AWS resources
+            # install AWS CLI to interact with AWS resources
             sudo apt-get -y -qq update
             sudo apt-get -y -qq install python3.4-dev
             sudo curl -O https://bootstrap.pypa.io/get-pip.py
