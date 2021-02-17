@@ -38,7 +38,7 @@ phases:
   
   pre_build:
     commands:
-      - echo installing MySQL client for testing connection
+      - echo installing MySQL client for testing connection 
       - apt-get install default-mysql-client -y
       # - apt-get install mysql-admin
 
