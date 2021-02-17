@@ -26,10 +26,11 @@ phases:
       - echo Docker pull MySQL
       - docker pull mysql:latest
   
-  pre-build:
+  pre_build:
     commands:
       - echo Running MySQL
       - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=${DB_PASS} -e MYSQL_DATABASE=${DB_NAME} -e MYSQL_USER=${$DB_USER} -d mysql:tag
+      
   build:
     commands:
       - echo Get into folder
