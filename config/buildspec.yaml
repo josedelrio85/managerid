@@ -28,13 +28,17 @@ phases:
       - echo cp -a ${CODEBUILD_SRC_DIR}/. ${GOPATH}/src/${PACKAGE}
       - cp -a ${CODEBUILD_SRC_DIR}/. ${GOPATH}/src/${PACKAGE}
 
+      - echo installing awscli
+      - sudo apt-get -y -qq update
+      - sudo apt-get -y install awscli
+
       - echo Docker pull MySQL
+      - aws ecr get-login-password | docker login --username AWS --password-stdin 206654300066.dkr.ecr.eu-west-1.amazonaws.com
       - docker pull 206654300066.dkr.ecr.eu-west-1.amazonaws.com/mysql5.7
   
   pre_build:
     commands:
       - echo installing MySQL client for testing connection
-      - apt-get update -y -y
       - apt-get install default-mysql-client -y
       # - apt-get install mysql-admin
 
