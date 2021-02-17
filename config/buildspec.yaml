@@ -35,6 +35,12 @@ phases:
       - echo Running MySQL
       - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=$DB_PASS -e MYSQL_DATABASE=$DB_NAME -e MYSQL_USER=$DB_USER -d mysql:latest
 
+      - echo installing MySQL client for testing connection
+      - apt-get install default-mysql-client
+
+      - echo Testing MySQL connection
+      - mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -P ${DB_PORT} --protocol=tcp
+
   build:
     commands:
       - echo Get into folder
