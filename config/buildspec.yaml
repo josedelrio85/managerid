@@ -3,6 +3,10 @@ version: 0.2
 env:
   variables:
     PACKAGE: "github.com/josedelrio85/managerid"
+    DB_PORT: "3306"
+    DB_HOST: "127.0.0.1"
+    DB_USER: test
+    DB_PASS: test
 
 phases:
   install:
@@ -18,7 +22,14 @@ phases:
       - echo cp -a ${CODEBUILD_SRC_DIR}/. ${GOPATH}/src/${PACKAGE}
       - cp -a ${CODEBUILD_SRC_DIR}/. ${GOPATH}/src/${PACKAGE}
 
-      - cd ${GOPATH}/src/${PACKAGE} && go vet -mod=vendor ./... && go test -mod=vendor -v ./...
+      - echo Get into folder
+      - cd ${GOPATH}/src/${PACKAGE} 
+      
+      - echo Running tests 1...
+      - go vet -mod=vendor ./...
+      
+      - echo Running tests 2...
+      - go test -mod=vendor -v ./...
 
   build:
     commands:
