@@ -29,8 +29,8 @@ phases:
       - cp -a ${CODEBUILD_SRC_DIR}/. ${GOPATH}/src/${PACKAGE}
 
       - echo installing awscli
-      - sudo apt-get -y -qq update
-      - sudo apt-get -y install awscli
+      - apt-get -y -qq update
+      - apt-get -y install awscli
 
       - echo Docker pull MySQL
       - aws ecr get-login-password | docker login --username AWS --password-stdin 206654300066.dkr.ecr.eu-west-1.amazonaws.com
