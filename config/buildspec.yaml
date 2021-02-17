@@ -33,7 +33,7 @@ phases:
   pre_build:
     commands:
       - echo Running MySQL
-      - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=${DB_PASS} -e MYSQL_DATABASE=${DB_NAME} -e MYSQL_USER=${$DB_USER} -d mysql:latest
+      - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=$(DB_PASS) -e MYSQL_DATABASE=$(DB_NAME) -e MYSQL_USER=$($DB_USER) -d mysql:latest
 
   build:
     commands:
