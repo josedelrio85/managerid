@@ -47,6 +47,9 @@ phases:
       # - docker run --rm -dit --health-cmd='mysqladmin ping --silent' -e MYSQL_ROOT_PASSWORD=$DB_PASS --name mysql mysql:5.7
       - docker run --rm -dit --health-cmd='mysqladmin ping --silent' -e MYSQL_ROOT_PASSWORD=$DB_PASS --name mysql 206654300066.dkr.ecr.eu-west-1.amazonaws.com/mysql5.7
 
+      - echo Docker MySQL logs 
+      - docker logs mysql | tail -n 2
+      
       - echo Waiting for MySQL to be ready...
       - |
             for i in `seq 1 10`;
@@ -55,7 +58,8 @@ phases:
               echo -n .
               sleep 1
             done
-            echo Failed waiting for MySQL && exit 1
+            echo Failed waiting for MySQL 
+      #&& exit 1
       
       - echo Docker MySQL logs 
       - docker logs mysql | tail -n 2
