@@ -40,7 +40,7 @@ phases:
       - apt-get install default-mysql-client -y
 
       - echo Testing MySQL connection
-      - mysql -h ${DB_HOST} -u ${DB_USER} -p${DB_PASS} ${DB_NAME} -P ${DB_PORT} --protocol=tcp
+      - mysql -h $DB_HOST -u $DB_USER -p$DB_PASS $DB_NAME -P $DB_PORT --protocol=tcp
 
   build:
     commands:
