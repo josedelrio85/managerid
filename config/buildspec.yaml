@@ -29,7 +29,7 @@ phases:
       - cp -a ${CODEBUILD_SRC_DIR}/. ${GOPATH}/src/${PACKAGE}
 
       - echo Docker pull MySQL
-      - docker pull mysql:latest
+      - docker pull 206654300066.dkr.ecr.eu-west-1.amazonaws.com/mysql5.7
   
   pre_build:
     commands:
