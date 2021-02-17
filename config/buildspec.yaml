@@ -40,7 +40,8 @@ phases:
 
       - echo Running MySQL
       # - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=$DB_PASS -e MYSQL_DATABASE=$DB_NAME -e MYSQL_USER=$DB_USER -d mysql:latest
-      - docker run --rm -dit --health-cmd='mysqladmin ping --silent' -e MYSQL_ROOT_PASSWORD=$DB_PASS --name mysql mysql:5.7
+      # - docker run --rm -dit --health-cmd='mysqladmin ping --silent' -e MYSQL_ROOT_PASSWORD=$DB_PASS --name mysql mysql:5.7
+      - docker run --rm -dit --health-cmd='mysqladmin ping --silent' -e MYSQL_ROOT_PASSWORD=$DB_PASS --name mysql 206654300066.dkr.ecr.eu-west-1.amazonaws.com/mysql5.7
 
       - echo Docker MySQL logs 
       - docker logs mysql | tail -n 2
