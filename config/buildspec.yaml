@@ -64,6 +64,9 @@ phases:
       - echo Docker MySQL logs 
       - docker logs mysql | tail -n 2
 
+      - echo Docker MySQL IP Address 
+      - docker inspect mysql --format '{{json .NetworkSettings.Networks.bridge.IPAddress}}'
+
       - echo Testing MySQL connection
       # - mysql -u$DB_USER -p$DB_PASS $DB_NAME -P$DB_PORT --protocol=tcp
       # - mysql -h$DB_HOST -uroot -p$DB_PASS
