@@ -5,9 +5,9 @@ env:
     PACKAGE: "github.com/josedelrio85/managerid"
     DB_PORT: "3306"
     DB_HOST: "127.0.0.1"
-    DB_USER: test
-    DB_PASS: test
-    DB_NAME: test
+    DB_USER: "test"
+    DB_PASS: "test"
+    DB_NAME: "test"
 
 phases:
   install:
@@ -33,7 +33,7 @@ phases:
   pre_build:
     commands:
       - echo Running MySQL
-      - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=$(DB_PASS) -e MYSQL_DATABASE=$(DB_NAME) -e MYSQL_USER=$($DB_USER) -d mysql:latest
+      - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=$DB_PASS -e MYSQL_DATABASE=$DB_NAME -e MYSQL_USER=$DB_USER -d mysql:latest
 
   build:
     commands:
