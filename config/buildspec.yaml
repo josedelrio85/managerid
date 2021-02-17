@@ -4,7 +4,8 @@ env:
   variables:
     PACKAGE: "github.com/josedelrio85/managerid"
     DB_PORT: "3306"
-    DB_HOST: "127.0.0.1"
+    # DB_HOST: "127.0.0.1"
+    DB_HOST: "localhost"
     DB_USER: "test"
     DB_PASS: "test"
     DB_NAME: "test"
@@ -39,9 +40,11 @@ phases:
       - apt-get update -y && apt-get dist-upgrade -y
       - apt-get install default-mysql-client -y
 
+
+      - echo Docker network inspect
+      - docker network ls -a
+
       - echo Testing MySQL connection
-      - echo -h$DB_HOST -u$DB_USER -p$DB_PASS -P$DB_PORT
-      - echo -h${DB_HOST} -u${DB_USER} -p$(DB_PASS) -P$(DB_PORT)
       - mysql -h$DB_HOST -u$DB_USER -p$DB_PASS $DB_NAME -P$DB_PORT --protocol=tcp
 
   build:
