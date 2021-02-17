@@ -33,15 +33,20 @@ phases:
   
   pre_build:
     commands:
-      - echo Running MySQL
-      - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=$DB_PASS -e MYSQL_DATABASE=$DB_NAME -e MYSQL_USER=$DB_USER -d mysql:latest
-
       - echo installing MySQL client for testing connection
       - apt-get update -y && apt-get dist-upgrade -y
       - apt-get install default-mysql-client -y
 
+      - echo Running MySQL
+      # - docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=$DB_PASS -e MYSQL_DATABASE=$DB_NAME -e MYSQL_USER=$DB_USER -d mysql:latest
+      - docker run --rm -dit -e MYSQL_ROOT_PASSWORD=$DB_PASS --name mysql mysql:5.7
+
+      - echo Docker MySQL logs 
+      - docker logs mysql | tail -n 2
+
       - echo Testing MySQL connection
-      - mysql -u$DB_USER -p$DB_PASS $DB_NAME -P$DB_PORT --protocol=tcp
+      # - mysql -u$DB_USER -p$DB_PASS $DB_NAME -P$DB_PORT --protocol=tcp
+      - mysql -h172.17.0.2 -uroot -p$DB_PASS
 
   build:
     commands:
