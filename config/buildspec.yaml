@@ -20,6 +20,6 @@ phases:
 
       - cd ${GOPATH}/src/${PACKAGE} && go vet -mod=vendor ./... && go test -mod=vendor -v ./...
 
-build:
-  commands:
-    - cd ${GOPATH}/src/${PACKAGE} && go get -d -v && go build -o ${CODEBUILD_SRC_DIR}/application
+  build:
+    commands:
+      - cd ${GOPATH}/src/${PACKAGE} && go get -d -v && go build -o ${CODEBUILD_SRC_DIR}/application
