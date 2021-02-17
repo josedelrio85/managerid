@@ -70,7 +70,7 @@ phases:
       - echo Testing MySQL connection
       # - mysql -u$DB_USER -p$DB_PASS $DB_NAME -P$DB_PORT --protocol=tcp
       # - mysql -h$DB_HOST -uroot -p$DB_PASS
-      - mysql -h172.18.0.1 -uroot -ptest
+      - mysql -h172.18.0.2 -uroot -ptest -P3306 --protocol=tcp
 
   build:
     commands:
