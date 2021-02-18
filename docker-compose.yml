@@ -10,7 +10,7 @@ services:
       MYSQL_DATABASE: test
       MYSQL_ROOT_USERNAME: test
     ports: 
-      - "3309:3306"
+      - "3306:3306"
     # volumes: 
       # -  /var/lib/docker/volumes/test:/var/lib/mysql
       # - test2:/var/lib/mysql  # creates volume and map to mysql container folder, live until docker-compose down
