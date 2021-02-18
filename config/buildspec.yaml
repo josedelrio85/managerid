@@ -58,7 +58,7 @@ phases:
       - docker logs mysql_container | tail -n 2
 
       - echo Testing MySQL connection
-      - mysql -uroot -ptest -P3309 -h127.0.0.1
+      - mysql -utest -ptest -h127.0.0.1
 
   build:
     commands:
